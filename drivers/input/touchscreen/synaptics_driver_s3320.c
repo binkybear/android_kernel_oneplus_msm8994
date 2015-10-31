@@ -1309,7 +1309,7 @@ static void int_touch(struct synaptics_ts_data *ts)
 	{
 		input_report_key(ts->input_dev,BTN_TOUCH, 0);
         if (3 == (++prlog_count % 6))
-            TPD_ERR("all finger up\n");
+            //TPD_ERR("all finger up\n");
 		input_report_key(ts->input_dev, BTN_TOOL_FINGER, 0);
 #ifndef TYPE_B_PROTOCOL
 		input_mt_sync(ts->input_dev);
