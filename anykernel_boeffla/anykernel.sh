@@ -30,6 +30,7 @@ device.name15=
 # shell variables
 block=/dev/block/bootdevice/by-name/boot;
 add_seandroidenforce=0
+supersu_exclusions=""
 
 ############### AnyKernel setup end ############### 
 
@@ -72,8 +73,20 @@ dump_boot()
 	fi;
 
 	if [ -f $ramdisk/boeffla-anykernel ]; then
-		   ui_print "  Installing over existing Boeffla Anykernel...";
-		   ui_print " ";
+			ui_print "  Installing over existing Boeffla Anykernel...";
+			ui_print " ";
+	fi
+
+	if [ -d $ramdisk/su ]; then
+			ui_print "  SuperSu systemless detected...";
+			ui_print " ";
+
+			SAVE_IFS=$IFS;
+			IFS=";"
+			for filename in $supersu_exclusions; do 
+				rm -f /tmp/anykernel/rdtmp/$filename
+			done
+			IFS=$SAVE_IFS;
 	fi;
 
 	cp -af /tmp/anykernel/rdtmp/* $ramdisk;
@@ -168,7 +181,7 @@ replace_section()
 {
 	S1=$(echo ${2} | sed 's/\//\\\//g'); # escape forward slashes
 	S2=$(echo ${3} | sed 's/\//\\\//g'); # escape forward slashes
-	line=`grep -n "$2" $1 | cut -d: -f1`;
+	line=`grep -n "$2" $1 | head -n1 | cut -d: -f1`;
 	sed -i "/${S1}/,/${S2}/d" $1;
 	sed -i "${line}s;^;${4}\n;" $1;
 }
@@ -190,7 +203,7 @@ insert_line()
 			after) offset=1;;
 		esac;
 
-		line=$((`grep -n "$4" $1 | cut -d: -f1` + offset));
+		line=$((`grep -n "$4" $1 | head -n1 | cut -d: -f1` + offset));
 		sed -i "${line}s;^;${5}\n;" $1;
 	fi;
 }
@@ -199,7 +212,7 @@ insert_line()
 replace_line()
 {
 	if [ ! -z "$(grep "$2" $1)" ]; then
-		line=`grep -n "$2" $1 | cut -d: -f1`;
+		line=`grep -n "$2" $1 | head -n1 | cut -d: -f1`;
 		sed -i "${line}s;.*;${3};" $1;
 	fi;
 }
@@ -208,7 +221,7 @@ replace_line()
 remove_line()
 {
 	if [ ! -z "$(grep "$2" $1)" ]; then
-		line=`grep -n "$2" $1 | cut -d: -f1`;
+		line=`grep -n "$2" $1 | head -n1 | cut -d: -f1`;
 		sed -i "${line}d" $1;
 	fi;
 }
@@ -230,7 +243,7 @@ insert_file()
 			after) offset=1;;
 		esac;
 
-		line=$((`grep -n "$4" $1 | cut -d: -f1` + offset));
+		line=$((`grep -n "$4" $1 | head -n1 | cut -d: -f1` + offset));
 		sed -i "${line}s;^;\n;" $1;
 		sed -i "$((line - 1))r $patch/$5" $1;
 	fi;

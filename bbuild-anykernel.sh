@@ -13,6 +13,9 @@
 BOEFFLA_VERSION="Boeffla-Kernel"
 
 TOOLCHAIN="/opt/toolchains/aarch64-linux-android-4.9/bin/aarch64-linux-android-"
+ARCHITECTURE=arm64
+COMPILER_FLAGS_KERNEL=""
+COMPILER_FLAGS_MODULE=""
 
 COMPILE_DTB="n"
 MODULES_IN_SYSTEM="y"
@@ -71,6 +74,10 @@ if [ -f ~/x-settings.sh ]; then
 fi
 
 BOEFFLA_FILENAME="boeffla-kernel-$BOEFFLA_VERSION"
+
+# set environment
+export ARCH=$ARCHITECTURE
+export CROSS_COMPILE="${CCACHE} $TOOLCHAIN"
 
 
 #####################
@@ -139,9 +146,9 @@ step3_compile()
 
 	# compile source
 	if [ -z "$OUTPUT_FOLDER" ]; then
-		make -j$NUM_CPUS 2>&1 |tee ../compile.log
+		make -j$NUM_CPUS CFLAGS_KERNEL="$COMPILER_FLAGS_KERNEL" CFLAGS_MODULE="$COMPILER_FLAGS_MODULE" 2>&1 |tee ../compile.log
 	else
-		make -j$NUM_CPUS O=$OUTPUT_FOLDER 2>&1 |tee ../compile.log
+		make -j$NUM_CPUS O=$OUTPUT_FOLDER CFLAGS_KERNEL="$COMPILER_FLAGS_KERNEL" CFLAGS_MODULE="$COMPILER_FLAGS_MODULE" 2>&1 |tee ../compile.log
 	fi
 
 	# compile dtb if required
@@ -205,7 +212,7 @@ step4_prepare_anykernel()
 	{
 		# copy dtb (if we have one)
 		if [ "y" == "$COMPILE_DTB" ]; then
-			cp $BUILD_PATH/$OUTPUT_FOLDER/arch64/arm/boot/dt.img $REPACK_PATH/dtb
+			cp $BUILD_PATH/$OUTPUT_FOLDER/arch/arm64/boot/dt.img $REPACK_PATH/dtb
 		fi
 
 		# copy modules (if required)
@@ -334,13 +341,13 @@ stepR_rewrite_config()
 
 	# copy defconfig, run make oldconfig and copy it back
 	cd $SOURCE_PATH
-	cp arch/arm/configs/$DEFCONFIG .config
+	cp arch/arm64/configs/$DEFCONFIG .config
 	make oldconfig
-	cp .config arch/arm/configs/$DEFCONFIG
+	cp .config arch/arm64/configs/$DEFCONFIG
 	make mrproper
 
 	# commit change
-	git add arch/arm/configs/$DEFCONFIG
+	git add arch/arm64/configs/$DEFCONFIG
 	git commit
 }
 

@@ -52,7 +52,7 @@ MODULE_LICENSE("GPLv2");
 /* general defaults */
 /*****************************************/
 
-#define STATIC_BANKS			2
+#define STATIC_BANKS			4
 #define DYNAMIC_BANKS			1
 #define BANKS_MAX				4
 
@@ -73,7 +73,9 @@ MODULE_LICENSE("GPLv2");
 #define BIT_STATUSBAR_DTSLEEP	0x0100
 
 #define IMPLEMENTED_FUNCTIONS	BIT_DYNAMIC_GESTURE_1 +\
-								BIT_STATUSBAR_DTSLEEP
+								BIT_STATUSBAR_DTSLEEP +\
+								BIT_STATIC_GESTURE_3 +\
+								BIT_STATIC_GESTURE_4
 								
 #define INPUT_DEV_NAME			"synaptics,s3320"
 
@@ -81,22 +83,23 @@ MODULE_LICENSE("GPLv2");
 // Gestures - static definitions
 //
 // Bank1 = right->left on softkeys, Bank2 = left->right on softkeys
+// Bank3 = right->left on launcher dock, Bank4 = left->right on launcher dock
 //
 //									Bank	1	  2
-static int STATIC_Y_MIN1[STATIC_BANKS] = {1900, 1900};
-static int STATIC_Y_MAX1[STATIC_BANKS] = {2400, 2400};
-static int STATIC_X_MAX1[STATIC_BANKS] = {1280, 300};
-static int STATIC_X_MIN1[STATIC_BANKS] = {700,  0};
+static int STATIC_Y_MIN1[STATIC_BANKS] = {1900, 1900, 1700, 1700};
+static int STATIC_Y_MAX1[STATIC_BANKS] = {2400, 2400, 1920, 1920};
+static int STATIC_X_MAX1[STATIC_BANKS] = {1280, 300,  1280, 300 };
+static int STATIC_X_MIN1[STATIC_BANKS] = {700,  0,     700, 0   };
 
-static int STATIC_Y_MIN2[STATIC_BANKS] = {1900, 1900};
-static int STATIC_Y_MAX2[STATIC_BANKS] = {2400, 2400};
-static int STATIC_X_MAX2[STATIC_BANKS] = {650, 650};
-static int STATIC_X_MIN2[STATIC_BANKS] = {350,  350};
+static int STATIC_Y_MIN2[STATIC_BANKS] = {1900, 1900, 1700, 1700};
+static int STATIC_Y_MAX2[STATIC_BANKS] = {2400, 2400, 1920, 1920};
+static int STATIC_X_MAX2[STATIC_BANKS] = {650,  650,  650,  650 };
+static int STATIC_X_MIN2[STATIC_BANKS] = {350,  350,  350,  350 };
 
-static int STATIC_Y_MIN3[STATIC_BANKS] = {1900, 1900};
-static int STATIC_Y_MAX3[STATIC_BANKS] = {2400, 2400};
-static int STATIC_X_MAX3[STATIC_BANKS] = {300, 1280};
-static int STATIC_X_MIN3[STATIC_BANKS] = {0,  700};
+static int STATIC_Y_MIN3[STATIC_BANKS] = {1900, 1900, 1700, 1700};
+static int STATIC_Y_MAX3[STATIC_BANKS] = {2400, 2400, 1920, 1920};
+static int STATIC_X_MAX3[STATIC_BANKS] = {300,  1280, 300,  1280};
+static int STATIC_X_MIN3[STATIC_BANKS] = {0,    700,  0,    700 };
 
 // Gestures - dynamic definitions
 //
