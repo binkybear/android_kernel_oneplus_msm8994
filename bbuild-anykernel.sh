@@ -215,22 +215,31 @@ step4_prepare_anykernel()
 			cp $BUILD_PATH/$OUTPUT_FOLDER/arch/arm64/boot/dt.img $REPACK_PATH/dtb
 		fi
 
-		# copy modules (if required)
+		# copy modules to either modules folder (CM and derivates) or directly in ramdisk (Samsung stock)
 		if [ "y" == "$MODULES_IN_SYSTEM" ]; then
-			# copy generated modules
-			find $BUILD_PATH -name '*.ko' -exec cp -av {} $REPACK_PATH/modules/ \;
-
-			# copy static modules and rename from ko_ to ko, only if there are some
-			if [ "$(ls -A $BUILD_PATH/modules_boeffla)" ]; then
-				cp $BUILD_PATH/modules_boeffla/* $REPACK_PATH/modules
-				cd $REPACK_PATH/modules
-				for i in *.ko_; do mv $i ${i%ko_}ko; echo Static module: ${i%ko_}ko; done
-			fi
-
-			# strip modules
-			echo -e ">>> strip modules\n"
-			${TOOLCHAIN}strip --strip-unneeded $REPACK_PATH/modules/*
+			MODULES_PATH=$REPACK_PATH/modules
+		else
+			MODULES_PATH=$REPACK_PATH/ramdisk/lib/modules
 		fi
+
+		mkdir -p $MODULES_PATH
+
+		# copy generated modules
+		find $BUILD_PATH -name '*.ko' -exec cp -av {} $MODULES_PATH \;
+
+		# copy static modules and rename from ko_ to ko, only if there are some
+		if [ "$(ls -A $BUILD_PATH/modules_boeffla)" ]; then
+			cp $BUILD_PATH/modules_boeffla/* $MODULES_PATH
+			cd $MODULES_PATH
+			for i in *.ko_; do mv $i ${i%ko_}ko; echo Static module: ${i%ko_}ko; done
+		fi
+
+		# set module permissions
+		chmod 644 $MODULES_PATH/*
+
+		# strip modules
+		echo -e ">>> strip modules\n"
+		${TOOLCHAIN}strip --strip-unneeded $MODULES_PATH/*
 
 	} 2>/dev/null
 
@@ -384,6 +393,44 @@ stepB_backup()
 	fi
 }
 
+display_help()
+{
+	echo
+	echo
+	echo "Function menu (anykernel version)"
+	echo "======================================================================"
+	echo
+	echo "0  = copy code         |  5  = create anykernel"
+	echo "1  = make clean        |  "
+	echo "2  = make config       |  7  = analyse log"
+	echo "3  = compile           |  8  = transfer kernel"
+	echo "4  = prepare anykernel |  9  = send finish mail"
+	echo
+	echo "rel = all, execute steps 0-9 - without CCACHE  |  r = rewrite config"
+	echo "a   = all, execute steps 0-9                   |  c = cleanup"
+	echo "u   = upd, execute steps 3-9                   |  b = backup"
+	echo "ur  = upd, execute steps 5-9                   |"
+	echo
+	echo "======================================================================"
+	echo
+	echo "Parameters:"
+	echo
+	echo "  Boeffla version:  $BOEFFLA_VERSION"
+	echo "  Boeffla date:     $BOEFFLA_DATE"
+	echo "  Git branch:       $GIT_BRANCH"
+	echo "  CPU Cores:        $NUM_CPUS"
+	echo
+	echo "  Toolchain:     $TOOLCHAIN"
+	echo "  Cross_compile: $TOOLCHAIN_COMPILE"
+	echo "  Root path:     $ROOT_PATH"
+	echo "  Root dir:      $ROOT_DIR_NAME"
+	echo "  Source path:   $SOURCE_PATH"
+	echo "  Build path:    $BUILD_PATH"
+	echo "  Repack path:   $REPACK_PATH"
+	echo
+	echo "======================================================================"
+}
+
 
 ################
 # main function
@@ -403,7 +450,6 @@ case "$1" in
 		step7_analyse_log
 		step8_transfer_kernel
 		step9_send_finished_mail
-		exit
 		;;
 	a)
 		step0_copy_code
@@ -415,7 +461,6 @@ case "$1" in
 		step7_analyse_log
 		step8_transfer_kernel
 		step9_send_finished_mail
-		exit
 		;;
 	u)
 		step3_compile
@@ -424,102 +469,54 @@ case "$1" in
 		step7_analyse_log
 		step8_transfer_kernel
 		step9_send_finished_mail
-		exit
 		;;
 	ur)
 		step5_create_anykernel_zip
 		step7_analyse_log
 		step8_transfer_kernel
 		step9_send_finished_mail
-		exit
 		;;
 	0)
 		step0_copy_code
-		exit
 		;;
 	1)
 		step1_make_clean
-		exit
 		;;
 	2)
 		step2_make_config
-		exit
 		;;
 	3)
 		step3_compile
-		exit
 		;;
 	4)
 		step4_prepare_anykernel
-		exit
 		;;
 	5)
 		step5_create_anykernel_zip
-		exit
 		;;
 	6)
 		# do nothing
-		exit
 		;;
 	7)
 		step7_analyse_log
-		exit
 		;;
 	8)
 		step8_transfer_kernel
-		exit
 		;;
 	9)
 		step9_send_finished_mail
-		exit
 		;;
 	b)
 		stepB_backup
-		exit
 		;;
 	c)
 		stepC_cleanup
-		exit
 		;;
 	r)
 		stepR_rewrite_config
-		exit
+		;;
+
+	*)
+		display_help
 		;;
 esac
-
-echo
-echo
-echo "Function menu (anykernel version)"
-echo "======================================================================"
-echo
-echo "0  = copy code         |  5  = create anykernel"
-echo "1  = make clean        |  "
-echo "2  = make config       |  7  = analyse log"
-echo "3  = compile           |  8  = transfer kernel"
-echo "4  = prepare anykernel |  9  = send finish mail"
-echo
-echo "rel = all, execute steps 0-9 - without CCACHE  |  r = rewrite config"
-echo "a   = all, execute steps 0-9                   |  c = cleanup"
-echo "u   = upd, execute steps 3-9                   |  b = backup"
-echo "ur  = upd, execute steps 5-9                   |"
-echo
-echo "======================================================================"
-echo
-echo "Parameters:"
-echo
-echo "  Boeffla version:  $BOEFFLA_VERSION"
-echo "  Boeffla date:     $BOEFFLA_DATE"
-echo "  Git branch:       $GIT_BRANCH"
-echo "  CPU Cores:        $NUM_CPUS"
-echo
-echo "  Toolchain:     $TOOLCHAIN"
-echo "  Cross_compile: $TOOLCHAIN_COMPILE"
-echo "  Root path:     $ROOT_PATH"
-echo "  Root dir:      $ROOT_DIR_NAME"
-echo "  Source path:   $SOURCE_PATH"
-echo "  Build path:    $BUILD_PATH"
-echo "  Repack path:   $REPACK_PATH"
-echo
-echo "======================================================================"
-
-exit
